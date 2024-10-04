@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../constants/colors.dart';
 
 class ReviewCard extends StatelessWidget {
   final String profileImageUrl;
   final String nickname;
   final double rating;
   final String review;
+  final String movieTitle;
+  final String moviePosterUrl;
   final Function() onTap;
 
   const ReviewCard({
@@ -13,6 +16,8 @@ class ReviewCard extends StatelessWidget {
     required this.nickname,
     required this.rating,
     required this.review,
+    required this.movieTitle, // 영화 제목 추가
+    required this.moviePosterUrl, // 포스터 URL 추가
     required this.onTap,
   }) : super(key: key);
 
@@ -21,35 +26,42 @@ class ReviewCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 200,
-        margin: EdgeInsets.symmetric(horizontal: 8),
-        padding: EdgeInsets.all(8),
+        padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300]!),
+          color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CircleAvatar(
                   backgroundImage: NetworkImage(profileImageUrl),
-                  radius: 20,
+                  radius: 25,
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         nickname,
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: AppColors.textWhite,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
+                      SizedBox(height: 4),
                       Row(
                         children: [
                           Icon(Icons.star, color: Colors.yellow, size: 16),
-                          Text(rating.toString()),
+                          SizedBox(width: 4),
+                          Text(
+                            rating.toString(),
+                            style: TextStyle(color: AppColors.textWhite),
+                          ),
                         ],
                       ),
                     ],
@@ -57,12 +69,42 @@ class ReviewCard extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: 8),
+            SizedBox(height: 12),
             Text(
               review,
-              maxLines: 3,
+              style: TextStyle(
+                color: AppColors.textWhite,
+                fontSize: 14,
+              ),
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 12),
+            ),
+            SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: Image.network(
+                    moviePosterUrl,
+                    width: 60,
+                    height: 90,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    movieTitle,
+                    style: TextStyle(
+                      color: AppColors.textWhite,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

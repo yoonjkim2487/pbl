@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../constants/colors.dart';
 
 class MoreButton extends StatelessWidget {
   final VoidCallback onPressed;
@@ -8,7 +9,7 @@ class MoreButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      icon: Icon(Icons.more_horiz),
+      icon: Icon(Icons.more_horiz, color: AppColors.textWhite),
       onPressed: onPressed,
     );
   }

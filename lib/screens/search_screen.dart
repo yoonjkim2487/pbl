@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../uikit/widgets/top_bar.dart'; // TopBar import 추가
-import '../uikit/widgets/movie_card.dart'; // MovieCard import
-import '../uikit/widgets/actor_card.dart'; // ActorCard import 추가
-import '../uikit/widgets/sub_title.dart'; // SubTitle import 추가
+import '../constants/colors.dart';
+import '../data/movie_data.dart';
+import '../model/movie_model.dart';
+import '../uikit/widgets/movie_card.dart';
+import 'movie_detail_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   @override
@@ -10,193 +11,104 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  List<String> recentSearches = [];
-  List<String> popularSearches = ['영화1', '영화2', '영화3', '영화4', '영화5'];
-  TextEditingController searchController = TextEditingController(); // 검색어 입력 컨트롤러
-  bool isSearching = false; // 검색 상태
+  List<MovieModel> _topRatedMovies = [];
+  List<MovieModel> _filteredMovies = [];
+  bool _isLoading = true;
+  TextEditingController _searchController = TextEditingController();
 
-  void performSearch(String query) {
-    // 검색 결과 뷰어를 보여주는 로직
+  @override
+  void initState() {
+    super.initState();
+    _fetchMovies();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  _fetchMovies() async {
+    try {
+      MovieData movieData = MovieData();
+      _topRatedMovies = await movieData.fetchTopRatedMovie();
+      setState(() {
+        _isLoading = false;
+        _filteredMovies = _topRatedMovies;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false; // 실패 시에도 로딩 종료
+      });
+      // 예외를 다루는 코드 추가 가능
+    }
+  }
+
+  _onSearchChanged() {
     setState(() {
-      isSearching = true; // 검색 상태로 변경
+      final query = _searchController.text;
+      _filteredMovies = _topRatedMovies
+          .where((movie) => movie.title.toLowerCase().contains(query.toLowerCase()))
+          .toList();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-        // 검색창
-        Row(
-        children: [
-        Expanded(
-        child: TextField(
-          controller: searchController,
-          decoration: InputDecoration(
-            hintText: '영화, TV 프로그램, 인물을 검색해보세요',
-            prefixIcon: Icon(Icons.search),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          onSubmitted: (value) {
-            if (value.isNotEmpty) {
-              // 최근 검색어에 추가
-              setState(() {
-                recentSearches.insert(0, value);
-                if (recentSearches.length > 5) {
-                  recentSearches.removeLast(); // 최대 5개 유지
-                }
-                performSearch(value); // 검색 실행
-              });
-            }
-          },
-        ),
-      ),
-      SizedBox(width: 8),
-      IconButton(
-        icon: Icon(Icons.cancel, color: Colors.red), // 취소 버튼
-        onPressed: () {
-          setState(() {
-            searchController.clear(); // 입력칸 비우기
-            isSearching = false; // 검색 상태를 false로 변경
-          });
-        },
-      ),
-      ],
-    ),
-    SizedBox(height: 10),
-    // 검색어 결과 표시
-    if (isSearching) ...[
-    // 검색 결과가 있을 경우
-    Expanded(
-    child: SingleChildScrollView(
-    child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-    SubTitle(title: '검색 결과'),
-    // 영화 결과
-    Container(
-    height: 200,
-    child: ListView.builder(
-    scrollDirection: Axis.horizontal,
-    itemCount: 3, // 예시 데이터 개수
-    itemBuilder: (context, index) {
-    return MovieCard(
-    title: '${searchController.text} 영화 제목 ${index + 1}',
-    imageUrl: 'https://via.placeholder.com/100x150',
-    rank: index + 1,
-    onTap: () {
-    // TODO: 영화 상세 페이지로 이동
-    },
-    );
-    },
-    ),
-    ),
-    SizedBox(height: 16),
-    // 시리즈 결과
-    SubTitle(title: '시리즈'),
-    Container(
-    height: 200,
-    child: ListView.builder(
-    scrollDirection: Axis.horizontal,
-    itemCount: 3, // 예시 데이터 개수
-    itemBuilder: (context, index) {
-    return MovieCard(
-    title: '${searchController.text} 시리즈 제목 ${index + 1}',
-    imageUrl: 'https://via.placeholder.com/100x150',
-    rank: index + 1,
-    onTap: () {
-    // TODO: 시리즈 상세 페이지로 이동
-    },
-    );
-    },
-    ),
-    ),
-    SizedBox(height: 16),
-    // 출연진 결과
-    SubTitle(title: '출연진'),
-    Container(
-    height: 150,
-    child: ListView.builder(
-    scrollDirection: Axis.horizontal,
-    itemCount: 5, // 예시 데이터 개수
-    itemBuilder: (context, index) {
-    return ActorCard(
-    name: '${searchController.text} 배우 ${index + 1}',
-      imageUrl: 'https://via.placeholder.com/80',
-      onTap: () {
-        // TODO: 배우 상세 페이지로 이동
-      },
-    );
-    },
-    ),
-    ),
-    ],
-    ),
-    ),
-    ),
-    ] else ...[
-      // 최근 검색어 섹션
-      if (recentSearches.isNotEmpty) ...[
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text('최근 검색어', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        ),
-        Wrap(
-          children: recentSearches.map((search) => Padding(
-            padding: const EdgeInsets.all(4.0),
-            child: GestureDetector(
-              onTap: () {
-                // 최근 검색어를 클릭 시 해당 검색어로 검색
-                setState(() {
-                  searchController.text = search; // 입력칸에 검색어 채우기
-                  isSearching = true; // 검색 상태 변경
-                });
-              },
-              child: Chip(
-                label: Text(search),
-                onDeleted: () {
-                  setState(() {
-                    recentSearches.remove(search); // 검색어 삭제
-                  });
-                },
+            TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: '영화, TV 프로그램, 인물을 검색해보세요',
+                prefixIcon: Icon(Icons.search,color: AppColors.textWhite),
+                filled: true,
+                fillColor: AppColors.cardBackground,
               ),
+                style: TextStyle(color:AppColors.textWhite)
             ),
-          )).toList(),
-        ),
-      ],
-      SizedBox(height: 10),
-      // 인기 검색어 섹션
-      Align(
-        alignment: Alignment.centerLeft,
-        child: Text('인기 검색어', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-      ),
-      Wrap(
-        children: popularSearches.map((search) => Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: GestureDetector(
-            onTap: () {
-              // 인기 검색어 클릭 시 해당 검색어로 검색
-              setState(() {
-                searchController.text = search; // 입력칸에 검색어 채우기
-                isSearching = true; // 검색 상태 변경
-              });
-            },
-            child: Chip(
-              label: Text(search),
+
+            SizedBox(height: 10),
+            Expanded(
+              child:
+              _isLoading ? Center(child: CircularProgressIndicator()) : _buildMovieList(),
             ),
-          ),
-        )).toList(),
-      ),
-    ],
           ],
         ),
       ),
     );
   }
-}
 
+  Widget _buildMovieList() {
+    if (_filteredMovies.isEmpty) {
+      return Center(child: Text('결과가 없습니다.',style: TextStyle(color:AppColors.textWhite)));
+    }
+
+    return ListView.builder(
+      itemCount: _filteredMovies.length,
+      itemBuilder: (context, index) {
+        final movie = _filteredMovies[index];
+        return MovieCard(
+          title: movie.title,
+          image: Image.network(
+            'https://image.tmdb.org/t/p/w500${movie.posterPath}',
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
+          ),
+          releaseInfo: movie.releaseDate,
+          onTap: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MovieDetailScreen()),
+            );
+          },
+        );
+      },
+    );
+  }
+}

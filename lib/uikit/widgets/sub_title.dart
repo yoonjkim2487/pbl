@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../constants/colors.dart';
+
 
 class SubTitle extends StatelessWidget {
   final String title;
@@ -11,7 +13,11 @@ class SubTitle extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Text(
         title,
-        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: AppColors.textWhite,
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../uikit/widgets/top_bar.dart'; // TopBar import 추가
-import '../uikit/widgets/movie_list_item.dart'; // MovieListItem import 추가
+import 'package:untitled1/constants/colors.dart';
+import '../uikit/widgets/movie_card.dart';
+import '../uikit/widgets/top_bar.dart';
 
 class MovieListScreen extends StatefulWidget {
   @override
@@ -10,17 +11,23 @@ class MovieListScreen extends StatefulWidget {
 class _MovieListScreenState extends State<MovieListScreen> {
   List<String> _selectedGenres = [];
   String _sortBy = 'latest'; // 기본 정렬 기준
+
+  // 더미 영화 데이터를 생성합니다.
   List<Map<String, dynamic>> _movies = List.generate(20, (index) => {
     'title': '영화 제목 ${index + 1}',
     'imageUrl': 'https://via.placeholder.com/100x150',
     'releaseDate': '2023-05-${(index + 1).toString().padLeft(2, '0')}',
+    'voteAverage': 5.0 + index * 0.5 // 임의의 평점 추가 (5.0, 5.5, 6.0, ...)
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: TopBar(), // TopBar 사용
-      body: Column(
+      body:
+    Container(
+    color: AppColors.background,
+    child: Column(
         children: [
           // 장르 필터
           Padding(
@@ -56,14 +63,17 @@ class _MovieListScreenState extends State<MovieListScreen> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 DropdownButton<String>(
+                  dropdownColor: AppColors.cardBackground,
                   value: _sortBy,
                   items: [
-                    DropdownMenuItem(value: 'latest', child: Text('최신순')),
-                    DropdownMenuItem(value: 'popular', child: Text('인기순')),
+                    DropdownMenuItem(value: 'latest', child: Text('최신순', style: TextStyle(color: AppColors.textWhite))),
+                    DropdownMenuItem(value: 'popular', child: Text('인기순',style: TextStyle(color: AppColors.textWhite))),
+                    DropdownMenuItem(value: 'topRated', child: Text('별점 높은 순',style: TextStyle(color: AppColors.textWhite))),
                   ],
                   onChanged: (value) {
                     setState(() {
-                      _sortBy = value!; // 정렬 방식 변경
+                      _sortBy = value!;
+                      _sortMovies(); // 정렬 메소드 호출
                     });
                   },
                 ),
@@ -75,23 +85,43 @@ class _MovieListScreenState extends State<MovieListScreen> {
             child: GridView.builder(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
-                childAspectRatio: 0.7,
+                childAspectRatio: 0.43,
                 crossAxisSpacing: 8,
                 mainAxisSpacing: 8,
               ),
               itemCount: _movies.length,
               padding: EdgeInsets.all(8),
               itemBuilder: (context, index) {
-                return MovieListItem(
+                return MovieCard(
                   title: _movies[index]['title'],
-                  imageUrl: _movies[index]['imageUrl'],
-                  releaseDate: _movies[index]['releaseDate'],
+                  image: Image.network(
+                    _movies[index]['imageUrl'],
+                    fit: BoxFit.cover,
+                  ),
+                  releaseInfo: _movies[index]['releaseDate'],
+                  onTap: () {
+                    // 클릭 시 동작할 코드
+                  },
                 );
               },
             ),
           ),
         ],
       ),
+    )
     );
+  }
+
+  // 영화 정렬 메소드
+  void _sortMovies() {
+    if (_sortBy == 'latest') {
+      _movies.sort((a, b) => DateTime.parse(b['releaseDate']).compareTo(DateTime.parse(a['releaseDate'])));
+    } else if (_sortBy == 'popular') {
+      // 이곳에 인기순 정렬 로직을 추가
+      // 예: 랜덤 또는 향상된 무작위 값을 기준으로 정렬할 수 있습니다.
+      _movies.shuffle(); // 예시로 무작위로 섞기
+    } else if (_sortBy == 'topRated') {
+      _movies.sort((a, b) => b['voteAverage'].compareTo(a['voteAverage'])); // 별점 높은 순서로 정렬
+    }
   }
 }
